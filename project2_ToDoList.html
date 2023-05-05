@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>To Do List</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-aFq/bzH65dt+w6FI2ooMVUpc+21e0SRygnTpmBvdBgSdnuTN7QbdgL+OapgHtvPp" crossorigin="anonymous">
+</head>
+
+<body>
+    <div class="container my-3">
+        <h6 class="text-center alert alert-danger">Do not refresh this page as you may loose your data</h6>
+        <h2 style="text-align: center;">To Do's List</h2>
+
+        <div class="mb-3" style="display: none;" id="task_number_box">
+            <label for="task_number" class="form-label">Task Number</label>
+            <input type="text" class="form-control" id="task_number">
+        </div>
+        <div class="mb-3">
+            <label for="task" class="form-label">Task</label>
+            <input type="text" class="form-control" id="task">
+        </div>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea class="form-control" id="description" rows="2"></textarea>
+        </div>
+        <button class="btn btn-primary my-2" id="add">Add To List</button>
+        <button class="btn btn-danger my-2" id="cleartasks">Clear List</button>
+        <button class="btn btn-warning my-2" id="edittask" onclick="showTaskNumberBox()">Edit Task</button>
+
+        <table class="table my-4" id="my_table">
+            <thead>
+                <tr>
+                    <th scope="col">S. No.</th>
+                    <th scope="col">Task</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody id="tablerow">
+            </tbody>
+        </table>
+    </div>
+</body>
+<script>
+
+    //  Populate Listing table to display To Do tasks
+    function populateToDoList() {
+        if (localStorage.getItem('itemList') == null) {
+            itemListArray = [];
+            localStorage.setItem('itemList', JSON.stringify(itemListArray));
+        }
+
+        // populate to do list table
+        itemListArrayStr = localStorage.getItem('itemList');
+        itemListArray = JSON.parse(itemListArrayStr);
+        let str = '';
+        itemListArray.forEach((element, index) => {
+            str += `<tr id=row_num_${index}>
+                    <th scope="row">${index + 1}</th>
+                    <td>${element[0]}</td>
+                    <td>${element[1]}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="clearTask(${index})">Delete</button></button>
+                        <button class="btn btn-sm btn-success" onclick="doneTask(${index})">Done</button></button>
+                        <button class="btn btn-sm btn-success" onclick="increasePriority(${index})">&uarr;</button></button>
+                        <button class="btn btn-sm btn-danger" onclick="decreasePriority(${index})">&darr;</button></button>
+                    </td>
+                </tr>`
+        });
+
+        tablerow.innerHTML = str;
+    }
+
+    // Add items to To Do List and update listing table
+    function addAndUpdate() {
+        console.log('adding items to the list');
+        title = document.getElementById("task").value;
+        desc = document.getElementById("description").value;
+        task_number = document.getElementById('task_number').value;  // in case of an edit to an existing task
+        if (localStorage.getItem('itemList') == null) {
+            itemListArray = [];
+            itemListArray.push([title, desc]);
+            localStorage.setItem('itemList', JSON.stringify(itemListArray));
+        } else if (task_number) {
+            console.log('Going to edit the task');
+            itemListArrayStr = localStorage.getItem('itemList');
+            itemListArray = JSON.parse(itemListArrayStr);
+            if (title){
+                itemListArray[task_number - 1][0] = title;
+            }
+            if (desc) {
+                itemListArray[task_number - 1][1] = desc;
+            }
+            localStorage.setItem('itemList', JSON.stringify(itemListArray));
+        } else {
+            itemListArrayStr = localStorage.getItem('itemList');
+            itemListArray = JSON.parse(itemListArrayStr);
+            itemListArray.push([title, desc]);
+            localStorage.setItem('itemList', JSON.stringify(itemListArray));
+        }
+
+        document.getElementById("task").value = "";
+        document.getElementById("description").value = "";
+        document.getElementById("task_number").value = "";
+        document.getElementById('task_number_box').style.display = 'none';
+
+        populateToDoList();
+    }
+
+    populateToDoList()
+
+    add = document.getElementById("add");
+    add.addEventListener('click', addAndUpdate);
+
+    // Deleting task from To Do List
+    function clearTask(index) {
+        console.log(`Deleting task from index ${index}`);
+        itemsArrayStr = localStorage.getItem('itemList');
+        itemsArray = JSON.parse(itemsArrayStr);
+        itemsArray.splice(index, 1);
+        localStorage.setItem('itemList', JSON.stringify(itemsArray));
+        populateToDoList();
+    }
+
+    // Delete complete To Do list in one go
+    clearTasks = document.getElementById("cleartasks");
+    clearTasks.addEventListener('click', () => {
+        if (confirm('Do you really want to delete all items')) {
+            console.log('Clearning comlete list now');
+            localStorage.clear();
+        }
+        populateToDoList();
+    })
+
+    // Below code can be used to get the rowIndex of a row inside a table
+
+    // function doneTask(){
+    //     console.log('Going to mark this task as completed');
+    //     table = document.getElementById('my_table');
+    //     for(var i = 0; i < table.rows.length; i++){
+    //         table.rows[i].onclick = function(){
+    //             index = this.rowIndex;
+    //             console.log(`row index: ${index}`);
+    //         }
+
+    //     }
+    // }
+
+    // Mark a task as done, by changing the colour of the task
+    function doneTask(index) {
+        console.log('Going to mark this task as completed');
+        row = document.getElementById(`row_num_${index}`);
+        task = row.cells[1];
+        desc = row.cells[2];
+        task.style.color = '#1ED826';
+        desc.style.color = '#1ED826';
+    }
+
+    // Edit a task
+    function showTaskNumberBox() {
+        console.log('Going to display task number box');
+        document.getElementById('task_number_box').style.display = 'block';
+        document.getElementById("task").value = "";
+        document.getElementById("description").value = "";
+        document.getElementById("task_number").value = "";
+    }
+
+    // For increasing/decreasing the priority of task, we're just swapping array elements
+
+    // Increase priority of a task
+    function increasePriority(index){
+        console.log('Increasing the priority of task');
+        received_array = localStorage.getItem('itemList');
+        array = JSON.parse(received_array);
+        if (index > 0){
+            console.log(`index is: ${index}`);
+            remove_element = array.splice(index, 1, array[index-1]);
+            array[index-1] = remove_element[0];
+        }
+        else{
+            alert("Priority of first task can't be increased.");
+        }
+
+        localStorage.setItem('itemList', JSON.stringify(array));
+        populateToDoList();
+    }
+
+    // Decrease priority of a task
+    function decreasePriority(index){
+        console.log('decreasing the priority of task');
+        received_array = localStorage.getItem('itemList');
+        array = JSON.parse(received_array);
+        if (index < array.length - 1){
+            console.log(`index is: ${index}`);
+            remove_element = array.splice(index, 1, array[index+1]);
+            array[index+1] = remove_element[0];
+        }
+        else{
+            alert("Priority of last task can't be decreased.");
+        }
+
+        localStorage.setItem('itemList', JSON.stringify(array));
+        populateToDoList();
+    }
+
+</script>
+
+</html>
